@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DoctorPatient.Infrastructure;
+using DoctorPatient.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -8,6 +10,8 @@ namespace DoctorPatient.Controllers
 {
     public class HomeController : Controller
     {
+        private HospitalDbContext db = new HospitalDbContext();
+
         public ActionResult Index()
         {
             return View();
@@ -15,9 +19,14 @@ namespace DoctorPatient.Controllers
 
         public ActionResult About()
         {
-            ViewBag.Message = "Your application description page.";
-
-            return View();
+            IQueryable<AppointmentDateGroupViewModel> data = from appointment in db.Appointments
+                                                             group appointment by appointment.Date into dateGroup
+                                                             select new AppointmentDateGroupViewModel()
+                                                             {
+                                                                 AppointmentDate = dateGroup.Key,
+                                                                 PatientCount = dateGroup.Count()
+                                                             };
+            return View(data.ToList());
         }
 
         public ActionResult Contact()
@@ -25,6 +34,12 @@ namespace DoctorPatient.Controllers
             ViewBag.Message = "Your contact page.";
 
             return View();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            db.Dispose();
+            base.Dispose(disposing);
         }
     }
 }
